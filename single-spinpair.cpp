@@ -16,7 +16,7 @@ typedef Tensor::vector<Operator> veco;
 
 class constants {
 public:
-	static constexpr double omegab = 2*spin::pi*9.7E9;
+	static constexpr double omegab = 2*spin::pi*9.7_GHz;
 	
 	static constexpr double g = 2.002319304373782;
 	static constexpr double g_a = g;
