@@ -135,7 +135,7 @@ spin_pair random_pair() {
 	p.phi_a = dist_phi(engine);
 	p.phi_ab = dist_phi(engine);
 	p.theta_a = acos(dist_theta(engine));
-	p.theta_a = acos(dist_theta(engine));
+	p.theta_ab = acos(dist_theta(engine));
 	return p;
 }
 
