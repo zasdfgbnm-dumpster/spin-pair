@@ -75,39 +75,36 @@ public:
 		return D_b() *(I-3*prod(rb() ,rb() )/pow(r_b() ,2));
 	}
 	
-	int subspace(){
+	int subspace() const {
 		return index+1;
 	}
-	int subspace1(){
+	int subspace1() const {
 		return 2*index+1;
 	}
-	int subspace2(){
+	int subspace2() const {
 		return 2*index+2;
 	}
 	
 	Operator H_pair() const {
 		veco Sz0 = { O(0),O(0),Sz(0) };
-		Operator Hb = omegab*Sz(subspace1())+omegab*Sz(subspace2())+dot(S(subspace1()),Dab(),S(subspace2()));
+		Operator Hb = constants::omegab*Sz(subspace1())+constants::omegab*Sz(subspace2())+dot(S(subspace1()),Dab(),S(subspace2()));
 		Operator Hi = dot(Sz0,Da(),S(subspace1()))+dot(Sz0,Db(),S(subspace2()));
 		return Hb + Hi;
 	}
 	Operator H_pes() const {
-		return 0.5 * ( Dab()(0,0)+Dab()(1,1) ) * Sx(subspace()) + ( Da()(2,2)-Db(2,2) ) * Sz(0) * Sz(subspace());
+		return 0.5 * ( Dab()(0,0)+Dab()(1,1) ) * Sx(subspace()) + ( Da()(2,2)-Db()(2,2) ) * Sz(0) * Sz(subspace());
 	}
 	Operator rho0_pair() const {
-		int subspace1 = 
-		int subspace2 = subspace1+1;
-		return spin::I(subspace1)*spin::I(subspace2)/4;
+		return spin::I(subspace1())*spin::I(subspace2())/4;
 	}
 	Operator rho0_pes() const {
-		int subspace = index+1;
-		return spin::I(subspace)/2;
+		return spin::I(subspace())/2;
 	}
 	
 };
 
 ostream &operator<<(ostream &out,spin_pair p) {
-	out << "index    = " << index << endl;
+	out << "index    = " << p.index << endl;
 	out << "r_ab     = " << p.r_ab/1_nm << "nm" << endl;
 	out << "theta_ab = " << p.theta_ab/1_deg << " degree" << endl;
 	out << "phi_ab   = " << p.phi_ab/1_deg << " degree" << endl;
@@ -162,7 +159,7 @@ void pairs_simulation(double omega1,const std::vector<spin_pair> &pairs,ostream 
 	std::vector<Operator> rho0_pairs(pairs.size());
 	transform(pairs.begin(),pairs.end(),rho0_pairs.begin(),[](spin_pair p){return p.rho0_pair();});
 	Operator rho0e = Op<2>(0,0.5,0.5,0.5,0.5);
-	Operator rho0 = accumulate(rho0_pairs.begin(),rho0_pairs.end(),rho0e,multiplies<Operator>);
+	Operator rho0 = accumulate(rho0_pairs.begin(),rho0_pairs.end(),rho0e,multiplies<Operator>());
 	/* simulation */
 	auto U = H.U();
 	double step = t_end/n_points;
@@ -171,8 +168,8 @@ void pairs_simulation(double omega1,const std::vector<spin_pair> &pairs,ostream 
 		Operator rhot = U(t)*rho0*U(-t);
 		Operator rhote = rhot;
 		for(auto &i:pairs){
-			rhote = rhote.tr(i.tr(subspace1()));
-			rhote = rhote.tr(i.tr(subspace2()));
+			rhote = rhote.tr(i.subspace1());
+			rhote = rhote.tr(i.subspace2());
 		}
 		double sx = real(tr(rhote*Sx(0)));
 		out << t/1_us << "\t" << sx << endl;
@@ -191,7 +188,7 @@ void pes_simulation(double omega1,const std::vector<spin_pair> &pairs,ostream &o
 	std::vector<Operator> rho0_pes(pairs.size());
 	transform(pairs.begin(),pairs.end(),rho0_pes.begin(),[](spin_pair p){return p.rho0_pes();});
 	Operator rho0e = Op<2>(0,0.5,0.5,0.5,0.5);
-	Operator rho0 = accumulate(rho0_pes.begin(),rho0_pes.end(),rho0e,multiplies<Operator>);
+	Operator rho0 = accumulate(rho0_pes.begin(),rho0_pes.end(),rho0e,multiplies<Operator>());
 	/* simulation */
 	auto U = H.U();
 	double step = t_end/n_points;
@@ -200,7 +197,7 @@ void pes_simulation(double omega1,const std::vector<spin_pair> &pairs,ostream &o
 		Operator rhot = U(t)*rho0*U(-t);
 		Operator rhote = rhot;
 		for(auto &i:pairs)
-			rhote = rhote.tr(i.tr(subspace()));
+			rhote = rhote.tr(i.subspace());
 		double sx = real(tr(rhote*Sx(0)));
 		out << t/1_us << "\t" << sx << endl;
 	}
@@ -218,8 +215,10 @@ int main(){
 				stringstream fnstream;
 				fnstream << "n=" << n << ",w1=" << w1/1_MHz << "MHz.txt";
 				string suffix = fnstream.str();
-				pairs_simulation(w1,pairs,ofstream(string("pairs-")+suffix));
-				pes_simulation(w1,pairs,ofstream(string("pes-")+suffix));
+				ofstream pairs_out(string("pairs-")+suffix);
+				ofstream pes_out(string("pes-")+suffix);
+				pairs_simulation(w1,pairs,pairs_out);
+				pes_simulation(w1,pairs,pes_out);
 			}
 		}
 	}
