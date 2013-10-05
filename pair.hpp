@@ -206,6 +206,6 @@ void pes_simulation(double omega1,const std::vector<spin_pair> &pairs,ostream &o
 		for(auto &i:pairs)
 			rhote = rhote.tr(i.subspace());
 		double sx = real(tr(rhote*Sx(0)));
-		out << t/1_us << "\t" << sx << endl;
+		out << t/1_us << "\t" << sx << "\t" << sx*0.5+0.25 << endl;
 	}
 }
