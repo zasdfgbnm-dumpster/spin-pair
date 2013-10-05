@@ -3,7 +3,7 @@
 
 constexpr int threads = 4;
 constexpr int splits = 200;
-constexpr int per_thread_n = 100000;
+constexpr int per_thread_n = 2000000;
 constexpr int output_per = 10000;
 
 const double unit[2] = { 1_MHz,1_kHz };
